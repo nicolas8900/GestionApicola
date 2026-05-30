@@ -569,19 +569,15 @@ class AppApicola:
         if tel:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
-        pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
+        pdf.cell(140, 7, "Producto", border=1, align='C')
+        pdf.cell(40, 7, "Cantidad", border=1, align='R', ln=True)
         pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
-            pdf.multi_cell(100, 6, p['nombre'], border=1)
-            h = pdf.get_y() - y
-            pdf.set_xy(x + 100, y)
-            pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='C')
-            pdf.cell(30, h, "-", border=1, align='C')
-            pdf.cell(40, h, "-", border=1, align='C', ln=True)
+            pdf.multi_cell(140, 6, p['nombre'], border=1)
+            new_y = pdf.get_y()
+            pdf.set_xy(x + 140, y)
+            pdf.cell(40, new_y - y, f"{p['cant']:.0f}", border=1, align='R', ln=True)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             t_path = tmp.name
         pdf.output(t_path)
@@ -677,7 +673,7 @@ class AppApicola:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(20, 7, "Cant", border=1, align='R')
         pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         pdf.set_font("Arial", 'B', 10)
@@ -686,7 +682,7 @@ class AppApicola:
             pdf.multi_cell(100, 6, p['nombre'], border=1)
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
-            pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='C')
+            pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='R')
             pdf.cell(30, h, self.formato_moneda(p['prec']), border=1, align='R')
             pdf.cell(40, h, self.formato_moneda(p['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
@@ -857,8 +853,8 @@ class AppApicola:
             pdf.cell(0, 5, f"Año: {anio}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Prom ($)", border=1, align='R')
+        pdf.cell(20, 7, "Cant", border=1, align='R')
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
@@ -866,7 +862,7 @@ class AppApicola:
             pdf.multi_cell(100, 6, k, border=1)
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
-            pdf.cell(20, h, f"{v['cant']:.0f}", border=1, align='C')
+            pdf.cell(20, h, f"{v['cant']:.0f}", border=1, align='R')
             pdf.cell(30, h, self.formato_moneda(p_p), border=1, align='R')
             pdf.cell(40, h, self.formato_moneda(v['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
@@ -899,7 +895,7 @@ class AppApicola:
         pdf.cell(0, 5, f"Periodo: {filtro}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(20, 7, "Cant", border=1, align='R')
         pdf.cell(30, 7, "P.Prom ($)", border=1, align='R')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         for k, v in acc.items():
@@ -908,7 +904,7 @@ class AppApicola:
             pdf.multi_cell(100, 6, k, border=1)
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
-            pdf.cell(20, h, f"{v['cant']:.0f}", border=1, align='C')
+            pdf.cell(20, h, f"{v['cant']:.0f}", border=1, align='R')
             pdf.cell(30, h, self.formato_moneda(p_p), border=1, align='R')
             pdf.cell(40, h, self.formato_moneda(v['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
@@ -1283,9 +1279,9 @@ class AppApicola:
         nombre_f_full = cli.split('\n')[0].split(" (")[0].split(" - CUIT/DNI: ")[0]
         with get_db_connection() as conn:
             c = conn.cursor()
-            c.execute("SELECT telefono, localidad, provincia FROM clientes WHERE nombre || ' ' || apellido = ?", (nombre_f_full,))
+            c.execute("SELECT cuit_dni, telefono, localidad, provincia FROM clientes WHERE nombre || ' ' || apellido = ?", (nombre_f_full,))
             res = c.fetchone()
-            tel, loc, prov = (res[0], res[1], res[2]) if res else ("", "", "")
+            cuit, tel, loc, prov = (res[0], res[1], res[2], res[3]) if res else ("", "", "", "")
         conn.close()
 
         pdf = FPDF()
@@ -1302,13 +1298,15 @@ class AppApicola:
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True, align='R')
         pdf.cell(0, 5, f"Cliente: {nombre_f_full}", ln=True)
+        if cuit:
+            pdf.cell(0, 5, f"CUIT/DNI: {cuit}", ln=True)
         if loc:
             pdf.cell(0, 5, f"Ubicación: {loc}, {prov}", ln=True)
         if tel:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(20, 7, "Cant", border=1, align='R')
         pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         pdf.set_font("Arial", 'B', 10)
@@ -1317,7 +1315,7 @@ class AppApicola:
             pdf.multi_cell(100, 6, p['nombre'], border=1)
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
-            pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='C')
+            pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='R')
             pdf.cell(30, h, self.formato_moneda(p['prec']), border=1, align='R')
             pdf.cell(40, h, self.formato_moneda(p['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
