@@ -71,8 +71,8 @@ class AppApicola:
         ]
 
         init_db()
-        os.makedirs("pdf", exist_ok=True)
-        os.makedirs("presupuestos", exist_ok=True)
+        os.makedirs("Pdf", exist_ok=True)
+        os.makedirs("Presupuestos", exist_ok=True)
         os.makedirs("Deudores", exist_ok=True)
 
         with get_db_connection() as conn:
@@ -578,7 +578,7 @@ class AppApicola:
             return pdf_path
 
         nombre_archivo = nombre_f.replace(" ", "_").replace("/", "-")
-        pdf_path = os.path.join(os.getcwd(), "pdf", f"OrdenCarga_{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        pdf_path = os.path.join(os.getcwd(), "Pdf", f"OrdenCarga_{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(pdf_path)
         return pdf_path
 
@@ -708,7 +708,7 @@ class AppApicola:
             pdf.output(pdf_path)
             return pdf_path
         nombre_archivo = nombre_f.replace(" ", "_").replace("/", "-")
-        pdf_path = os.path.join(os.getcwd(), "pdf", f"{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        pdf_path = os.path.join(os.getcwd(), "Pdf", f"{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(pdf_path)
         return pdf_path
 
@@ -1363,8 +1363,8 @@ class AppApicola:
                 pdf_path = tmp.name
             pdf.output(pdf_path)
             return pdf_path
-        os.makedirs("presupuestos", exist_ok=True)
-        path = os.path.join("presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        os.makedirs("Presupuestos", exist_ok=True)
+        path = os.path.join("Presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(path)
         return path
 
