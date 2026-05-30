@@ -1072,12 +1072,12 @@ class AppApicola:
         cols = ["Nombre", "CUIT/DNI", "Teléfono", "Provincia", "Localidad", "Saldo"]
         ws = [60, 40, 40, 40, 40, 40]
         for i, col in enumerate(cols):
-            pdf.cell(ws[i], 10, col, border=1, align='C')
+            pdf.cell(ws[i], 7, col, border=1, align='C')
         pdf.ln()
         td = 0
         for item in items:
             for i, val in enumerate(item):
-                pdf.cell(ws[i], 10, str(val).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
+                pdf.cell(ws[i], 7, str(val).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
             pdf.ln()
             td += float(str(item[5]).replace(".", "").replace(",", "."))
         pdf.ln(5)
