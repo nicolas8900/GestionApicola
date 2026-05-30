@@ -521,23 +521,27 @@ class AppApicola:
 
         self.actualizar_ui_stock()
 
-        pdf_generado = None
+        pdf_vta, pdf_oc = None, None
         try:
-            pdf_generado = self.generar_ticket_pdf(self.cliente_actual_info, fecha, total, detalle, "Cliente", "clientes", con_iva)
+            pdf_vta = self.generar_ticket_pdf(self.cliente_actual_info, fecha, total, detalle, "Cliente", "clientes", con_iva)
+            if orden_carga:
+                pdf_oc = self.generar_orden_carga(self.cliente_actual_info, fecha, detalle, "clientes")
         except Exception as e:
-            messagebox.showerror("Error PDF", f"No se pudo guardar el archivo PDF.\nError: {e}")
+            messagebox.showerror("Error PDF", f"No se pudieron guardar los archivos PDF.\nError: {e}")
 
         msg = "Venta registrada correctamente.\n"
-        if pdf_generado:
-            msg += f"PDF: {os.path.basename(pdf_generado)}\n"
-        msg += "\n¿Desea imprimir el comprobante ahora?"
+        if pdf_vta:
+            msg += f"Ticket: {os.path.basename(pdf_vta)}\n"
+        if pdf_oc:
+            msg += f"Orden: {os.path.basename(pdf_oc)}\n"
+        msg += "\n¿Desea imprimir ahora?"
 
         if messagebox.askyesno("Éxito", msg):
-            t_path_venta = pdf_generado if pdf_generado else self.generar_ticket_pdf(self.cliente_actual_info, fecha, total, detalle, "Cliente", "clientes", con_iva)
-            archivos_a_imprimir = [t_path_venta]
-            if orden_carga:
-                t_path_carga = self.generar_orden_carga(self.cliente_actual_info, fecha, detalle, "clientes")
-                archivos_a_imprimir.append(t_path_carga)
+            archivos_a_imprimir = []
+            if pdf_vta:
+                archivos_a_imprimir.append(pdf_vta)
+            if pdf_oc:
+                archivos_a_imprimir.append(pdf_oc)
 
             for t_path in archivos_a_imprimir:
                 impreso = False
@@ -565,7 +569,7 @@ class AppApicola:
         self.limpiar_formulario_venta()
         self.actualizar_tablas()
 
-    def generar_orden_carga(self, persona_info, fecha, productos, tabla_db):
+    def generar_orden_carga(self, persona_info, fecha, productos, tabla_db, preview=False):
         nombre_f = persona_info.split(" (")[0].split(" - CUIT/DNI: ")[0]
         with get_db_connection() as conn:
             c = conn.cursor()
@@ -591,10 +595,17 @@ class AppApicola:
             new_y = pdf.get_y()
             pdf.set_xy(x + 140, y)
             pdf.cell(40, new_y - y, f"{p['cant']:.0f}", border=1, align='R', ln=True)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            t_path = tmp.name
-        pdf.output(t_path)
-        return t_path
+
+        if preview:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                pdf_path = tmp.name
+            pdf.output(pdf_path)
+            return pdf_path
+
+        nombre_archivo = nombre_f.replace(" ", "_").replace("/", "-")
+        pdf_path = os.path.join(os.getcwd(), "pdf", f"OrdenCarga_{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        pdf.output(pdf_path)
+        return pdf_path
 
     # --- PESTAÑA COMPRAS ---
     def setup_compras(self):
@@ -663,7 +674,41 @@ class AppApicola:
             c = conn.cursor()
             c.execute("INSERT INTO compras (proveedor_nombre, fecha, total, detalle) VALUES (?,?,?,?)", (self.proveedor_actual_info, fecha, total, json.dumps(detalle)))
             conn.commit()
-        messagebox.showinfo("Éxito", "Compra registrada.")
+
+        pdf_path = None
+        try:
+            pdf_path = self.generar_ticket_pdf(self.proveedor_actual_info, fecha, total, detalle, "Proveedor", "proveedores")
+        except Exception as e:
+            messagebox.showerror("Error PDF", str(e))
+
+        msg = "Compra registrada.\n"
+        if pdf_path:
+            msg += f"Archivo: {os.path.basename(pdf_path)}\n"
+        msg += "\n¿Desea imprimir ahora?"
+
+        if messagebox.askyesno("Éxito", msg):
+            if pdf_path:
+                impreso = False
+                try:
+                    if os.name == 'nt':
+                        try:
+                            os.startfile(pdf_path, "print")
+                            impreso = True
+                        except OSError:
+                            pdfgear = r"C:\Program Files\PDFgear\PDFLauncher.exe"
+                            if os.path.exists(pdfgear):
+                                subprocess.run([pdfgear, "-p", pdf_path], check=False)
+                                impreso = True
+                            else:
+                                raise
+                    elif os.name == 'posix':
+                        subprocess.run(['lpr', pdf_path], check=False)
+                        impreso = True
+                except Exception as e:
+                    messagebox.showwarning("Impresión", f"Error: {e}")
+                if not impreso:
+                    self.abrir_archivo(pdf_path)
+
         self.limpiar_formulario_compra()
         self.actualizar_tablas()
 
@@ -1241,7 +1286,42 @@ class AppApicola:
             conn.cursor().execute("INSERT INTO presupuestos (cliente_info, fecha, total, detalle) VALUES (?,?,?,?)",
                                   (cli, self.p_ent_fecha.get().strip(), t_f, json.dumps({"detalle": det, "iva_habilitado": i_en, "porc_iva": i_p, "total_sin_iva": t_s})))
             conn.commit()
-        self.abrir_archivo(self.generar_presupuesto_pdf(cli, self.p_ent_fecha.get().strip(), t_f, det, i_en, i_p, t_s))
+
+        fecha = self.p_ent_fecha.get().strip()
+        pdf_path = None
+        try:
+            pdf_path = self.generar_presupuesto_pdf(cli, fecha, t_f, det, i_en, i_p, t_s)
+        except Exception as e:
+            messagebox.showerror("Error PDF", str(e))
+
+        msg = "Presupuesto registrado.\n"
+        if pdf_path:
+            msg += f"Archivo: {os.path.basename(pdf_path)}\n"
+        msg += "\n¿Desea imprimir ahora?"
+
+        if messagebox.askyesno("Éxito", msg):
+            if pdf_path:
+                impreso = False
+                try:
+                    if os.name == 'nt':
+                        try:
+                            os.startfile(pdf_path, "print")
+                            impreso = True
+                        except OSError:
+                            pdfgear = r"C:\Program Files\PDFgear\PDFLauncher.exe"
+                            if os.path.exists(pdfgear):
+                                subprocess.run([pdfgear, "-p", pdf_path], check=False)
+                                impreso = True
+                            else:
+                                raise
+                    elif os.name == 'posix':
+                        subprocess.run(['lpr', pdf_path], check=False)
+                        impreso = True
+                except Exception as e:
+                    messagebox.showwarning("Impresión", f"Error: {e}")
+                if not impreso:
+                    self.abrir_archivo(pdf_path)
+
         self.limpiar_formulario_presupuesto()
         self.actualizar_tablas()
 
