@@ -73,6 +73,7 @@ class AppApicola:
         init_db()
         os.makedirs("pdf", exist_ok=True)
         os.makedirs("presupuestos", exist_ok=True)
+        os.makedirs("Deudores", exist_ok=True)
 
         with get_db_connection() as conn:
             c = conn.cursor()
@@ -1082,7 +1083,7 @@ class AppApicola:
         pdf.ln(5)
         pdf.cell(150, 7, "DEUDA TOTAL ($):", align='R')
         pdf.cell(40, 7, self.formato_moneda(td), border=1, align='R', ln=True)
-        path = os.path.join(os.getcwd(), "pdf", f"Deudores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf")
+        path = os.path.join("Deudores", f"Deudores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf")
         pdf.output(path)
         self.abrir_archivo(path)
 
