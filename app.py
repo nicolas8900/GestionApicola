@@ -545,7 +545,7 @@ class AppApicola:
                     elif os.name == 'posix':
                         subprocess.run(['lpr', t_path], check=False)
                 except OSError as e:
-                    messagebox.showwarning("Información de Impresión", f"Error: Falta asociación de archivos para imprimir PDFs. Por favor, imprima manualmente el archivo que se abrirá a continuación.\nDetalle: {e}")
+                    messagebox.showwarning("Información de Impresión", f"Error: Falta asociación de archivos para imprimir PDFs. Por favor, asocie un lector de PDF (Adobe, Sumatra, etc.) con la acción de imprimir o imprima manualmente el archivo que se abrirá a continuación.\nDetalle: {e}")
                 except Exception as e:
                     messagebox.showerror("Error de Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nError: {e}")
                 self.abrir_archivo(t_path)
@@ -569,15 +569,19 @@ class AppApicola:
         if tel:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
-        pdf.cell(140, 7, "Producto", border=1, align='C')
-        pdf.cell(40, 7, "Cantidad", border=1, align='C', ln=True)
+        pdf.cell(100, 7, "Producto", border=1, align='C')
+        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
         pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
-            pdf.multi_cell(140, 6, p['nombre'], border=1)
-            new_y = pdf.get_y()
-            pdf.set_xy(x + 140, y)
-            pdf.cell(40, new_y - y, f"{p['cant']:.0f}", border=1, align='C', ln=True)
+            pdf.multi_cell(100, 6, p['nombre'], border=1)
+            h = pdf.get_y() - y
+            pdf.set_xy(x + 100, y)
+            pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='C')
+            pdf.cell(30, h, "-", border=1, align='C')
+            pdf.cell(40, h, "-", border=1, align='C', ln=True)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             t_path = tmp.name
         pdf.output(t_path)
@@ -674,8 +678,8 @@ class AppApicola:
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
@@ -683,12 +687,12 @@ class AppApicola:
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
             pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='C')
-            pdf.cell(30, h, self.formato_moneda(p['prec']), border=1, align='C')
-            pdf.cell(40, h, self.formato_moneda(p['sub']), border=1, align='C', ln=True)
+            pdf.cell(30, h, self.formato_moneda(p['prec']), border=1, align='R')
+            pdf.cell(40, h, self.formato_moneda(p['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
         lbl_total = "TOTAL ($):" if etiqueta.lower() == "proveedor" else ("TOTAL CON IVA (21%) ($):" if con_iva else "TOTAL SIN IVA ($):")
         pdf.cell(150, 7, lbl_total, border=0, align='R')
-        pdf.cell(40, 7, self.formato_moneda(total), border=1, align='C', ln=True)
+        pdf.cell(40, 7, self.formato_moneda(total), border=1, align='R', ln=True)
         if preview:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                 pdf_path = tmp.name
@@ -854,9 +858,8 @@ class AppApicola:
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
-        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(30, 7, "P.Prom ($)", border=1, align='R')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
             x, y = pdf.get_x(), pdf.get_y()
@@ -864,11 +867,11 @@ class AppApicola:
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
             pdf.cell(20, h, f"{v['cant']:.0f}", border=1, align='C')
-            pdf.cell(30, h, self.formato_moneda(p_p), border=1, align='C')
-            pdf.cell(40, h, self.formato_moneda(v['sub']), border=1, align='C', ln=True)
+            pdf.cell(30, h, self.formato_moneda(p_p), border=1, align='R')
+            pdf.cell(40, h, self.formato_moneda(v['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
         pdf.cell(150, 7, "TOTAL ($):", align='R')
-        pdf.cell(40, 7, self.formato_moneda(tot), border=1, align='C', ln=True)
+        pdf.cell(40, 7, self.formato_moneda(tot), border=1, align='R', ln=True)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             t_path = tmp.name
         pdf.output(t_path)
@@ -897,9 +900,8 @@ class AppApicola:
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Prom ($)", border=1, align='C')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
-        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(30, 7, "P.Prom ($)", border=1, align='R')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
             x, y = pdf.get_x(), pdf.get_y()
@@ -907,11 +909,11 @@ class AppApicola:
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
             pdf.cell(20, h, f"{v['cant']:.0f}", border=1, align='C')
-            pdf.cell(30, h, self.formato_moneda(p_p), border=1, align='C')
-            pdf.cell(40, h, self.formato_moneda(v['sub']), border=1, align='C', ln=True)
+            pdf.cell(30, h, self.formato_moneda(p_p), border=1, align='R')
+            pdf.cell(40, h, self.formato_moneda(v['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
         pdf.cell(150, 7, "TOTAL ($):", align='R')
-        pdf.cell(40, 7, self.formato_moneda(tot), border=1, align='C', ln=True)
+        pdf.cell(40, 7, self.formato_moneda(tot), border=1, align='R', ln=True)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             t_path = tmp.name
         pdf.output(t_path)
@@ -1071,7 +1073,7 @@ class AppApicola:
             td += float(str(item[5]).replace(".", "").replace(",", "."))
         pdf.ln(5)
         pdf.cell(150, 7, "DEUDA TOTAL ($):", align='R')
-        pdf.cell(40, 7, self.formato_moneda(td), border=1, align='C', ln=True)
+        pdf.cell(40, 7, self.formato_moneda(td), border=1, align='R', ln=True)
         path = os.path.join(os.getcwd(), "pdf", f"Deudores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf")
         pdf.output(path)
         self.abrir_archivo(path)
@@ -1278,6 +1280,14 @@ class AppApicola:
             self.actualizar_tablas()
 
     def generar_presupuesto_pdf(self, cli, fecha, total, prods, iva_en=False, iva_p=21.0, t_s=0, preview=False):
+        nombre_f_full = cli.split('\n')[0].split(" (")[0].split(" - CUIT/DNI: ")[0]
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT telefono, localidad, provincia FROM clientes WHERE nombre || ' ' || apellido = ?", (nombre_f_full,))
+            res = c.fetchone()
+            tel, loc, prov = (res[0], res[1], res[2]) if res else ("", "", "")
+        conn.close()
+
         pdf = FPDF()
         pdf.add_page()
         logo = next((p for p in ["logo.png", "logo.jpg", "logo.jpeg", "logo apicolavallejos con cuit.png", "logo apicolavallejos con cuit.jpg"] if os.path.exists(p)), None)
@@ -1291,34 +1301,37 @@ class AppApicola:
         pdf.ln(35)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True, align='R')
-        pdf.cell(0, 7, "Datos del Cliente:", ln=True)
-        for line in cli.split('\n'):
-            pdf.cell(0, 5, line.encode('latin-1', 'replace').decode('latin-1'), ln=True)
+        pdf.cell(0, 5, f"Cliente: {nombre_f_full}", ln=True)
+        if loc:
+            pdf.cell(0, 5, f"Ubicación: {loc}, {prov}", ln=True)
+        if tel:
+            pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
+        pdf.set_font("Arial", 'B', 10)
         for p in prods:
             x, y = pdf.get_x(), pdf.get_y()
             pdf.multi_cell(100, 6, p['nombre'], border=1)
             h = pdf.get_y() - y
             pdf.set_xy(x + 100, y)
             pdf.cell(20, h, f"{p['cant']:.0f}", border=1, align='C')
-            pdf.cell(30, h, self.formato_moneda(p['prec']), border=1, align='C')
-            pdf.cell(40, h, self.formato_moneda(p['sub']), border=1, align='C', ln=True)
+            pdf.cell(30, h, self.formato_moneda(p['prec']), border=1, align='R')
+            pdf.cell(40, h, self.formato_moneda(p['sub']), border=1, align='R', ln=True)
         pdf.ln(5)
         if iva_en:
             pdf.cell(150, 6, "SUBTOTAL SIN IVA ($):", align='R')
-            pdf.cell(40, 6, self.formato_moneda(t_s), border=1, align='C', ln=True)
+            pdf.cell(40, 6, self.formato_moneda(t_s), border=1, align='R', ln=True)
             pdf.cell(150, 6, f"IVA ({iva_p}%) ($):", align='R')
-            pdf.cell(40, 6, self.formato_moneda(total - t_s), border=1, align='C', ln=True)
+            pdf.cell(40, 6, self.formato_moneda(total - t_s), border=1, align='R', ln=True)
             pdf.cell(150, 6, "TOTAL CON IVA ($):", align='R')
         else:
             pdf.cell(150, 6, "TOTAL ($):", align='R')
-        pdf.cell(40, 6, self.formato_moneda(total), border=1, align='C', ln=True)
+        pdf.cell(40, 6, self.formato_moneda(total), border=1, align='R', ln=True)
 
-        nombre_f = cli.split('\n')[0].split(" (")[0].split(" - CUIT/DNI: ")[0].replace(" ", "_")
+        nombre_f = nombre_f_full.replace(" ", "_")
         if preview:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                 pdf_path = tmp.name
