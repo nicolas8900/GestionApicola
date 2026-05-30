@@ -702,7 +702,10 @@ class AppApicola:
         return pdf_path
 
     def setup_historiales(self):
-        for tab, ent_attr, tree_attr, cmd_ver in [(self.tab_hven, "ent_busq_hven", "tree_hven", self.ver_ticket_hven), (self.tab_hcom, "ent_busq_hcom", "tree_hcom", self.ver_ticket_hcom)]:
+        for tab, ent_attr, tree_attr, cmd_ver, cmd_elim in [
+            (self.tab_hven, "ent_busq_hven", "tree_hven", self.ver_ticket_hven, self.eliminar_venta_h),
+            (self.tab_hcom, "ent_busq_hcom", "tree_hcom", self.ver_ticket_hcom, self.eliminar_compra_h)
+        ]:
             f_busq = ttk.Frame(tab)
             f_busq.pack(fill="x", padx=10, pady=5)
             ttk.Label(f_busq, text="Buscar:").pack(side="left")
@@ -711,6 +714,7 @@ class AppApicola:
             ent.bind("<KeyRelease>", lambda e: self.actualizar_tablas())
             setattr(self, ent_attr, ent)
             ttk.Button(f_busq, text="VER PDF", command=cmd_ver).pack(side="left", padx=5)
+            ttk.Button(f_busq, text="ELIMINAR", command=cmd_elim).pack(side="left", padx=5)
             cols = ("ID", "Nombre", "Apellido", "Provincia", "Localidad", "CUIT/DNI", "Fecha")
             tree = ttk.Treeview(tab, columns=cols, show='headings')
             for c in cols:
@@ -719,6 +723,28 @@ class AppApicola:
             tree.pack(fill="both", expand=True, padx=10, pady=10)
             tree.bind("<Double-1>", lambda e, cmd=cmd_ver: cmd())
             setattr(self, tree_attr, tree)
+
+    def eliminar_venta_h(self):
+        sel = self.tree_hven.selection()
+        if not sel:
+            return messagebox.showwarning("Error", "Seleccione una venta")
+        if messagebox.askyesno("Confirmar", "¿Desea eliminar este registro de venta?"):
+            v_id = self.tree_hven.item(sel)['values'][0]
+            with get_db_connection() as conn:
+                conn.cursor().execute("DELETE FROM ventas WHERE id=?", (v_id,))
+                conn.commit()
+            self.actualizar_tablas()
+
+    def eliminar_compra_h(self):
+        sel = self.tree_hcom.selection()
+        if not sel:
+            return messagebox.showwarning("Error", "Seleccione una compra")
+        if messagebox.askyesno("Confirmar", "¿Desea eliminar este registro de compra?"):
+            c_id = self.tree_hcom.item(sel)['values'][0]
+            with get_db_connection() as conn:
+                conn.cursor().execute("DELETE FROM compras WHERE id=?", (c_id,))
+                conn.commit()
+            self.actualizar_tablas()
 
     def ver_ticket_hven(self):
         sel = self.tree_hven.selection()
@@ -831,7 +857,7 @@ class AppApicola:
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1)
         pdf.cell(20, 7, "Cant", border=1, align='C')
-        pdf.cell(30, 7, "P.Prom ($)", border=1, align='C')
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
