@@ -544,6 +544,8 @@ class AppApicola:
                         os.startfile(t_path, "print")
                     elif os.name == 'posix':
                         subprocess.run(['lpr', t_path], check=False)
+                except OSError as e:
+                    messagebox.showwarning("Información de Impresión", f"No se pudo iniciar la impresión automática (Falta asociación de archivos).\nPor favor, imprima manualmente desde el PDF abierto.\nError: {e}")
                 except Exception as e:
                     messagebox.showerror("Error de Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nError: {e}")
                 self.abrir_archivo(t_path)
@@ -559,9 +561,6 @@ class AppApicola:
             tel, loc, prov = (res[0], res[1], res[2]) if res else ("", "", "")
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, 'APICOLA VALLEJOS - ORDEN DE CARGA', ln=True, align='C')
-        pdf.ln(5)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True)
         pdf.cell(0, 5, f"Cliente: {nombre_f}", ln=True)
@@ -664,9 +663,6 @@ class AppApicola:
         conn.close()
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, 'DETALLE DE OPERACION', ln=True, align='C')
-        pdf.ln(5)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True)
         pdf.cell(0, 5, f"{etiqueta}: {nombre_f}", ln=True)
@@ -848,8 +844,6 @@ class AppApicola:
                 acc[n]['sub'] += p['sub']
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, f"BALANCE - {tag.upper()}", ln=True, align='C')
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Entidad: {info}", ln=True)
         if anio:
@@ -893,8 +887,6 @@ class AppApicola:
                 acc[n]['sub'] += p['sub']
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, f"BALANCE {tabla.upper()}", ln=True, align='C')
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Periodo: {filtro}", ln=True)
         pdf.ln(5)
@@ -1056,10 +1048,8 @@ class AppApicola:
             return messagebox.showinfo("Aviso", "No hay deudores")
         pdf = FPDF(orientation='L')
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "LISTADO DE DEUDORES", ln=True, align='C')
         pdf.set_font("Arial", 'B', 10)
-        pdf.cell(0, 10, f"Fecha: {datetime.now().strftime('%d-%m-%Y %H:%M')}", ln=True, align='R')
+        pdf.cell(0, 5, f"Fecha: {datetime.now().strftime('%d-%m-%Y %H:%M')}", ln=True, align='R')
         pdf.ln(5)
         cols = ["Nombre", "CUIT/DNI", "Teléfono", "Provincia", "Localidad", "Saldo"]
         ws = [60, 40, 40, 40, 40, 40]
@@ -1073,7 +1063,8 @@ class AppApicola:
             pdf.ln()
             td += float(str(item[5]).replace(".", "").replace(",", "."))
         pdf.ln(5)
-        pdf.cell(0, 10, f"DEUDA TOTAL: $ {self.formato_moneda(td)}", ln=True, align='R')
+        pdf.cell(150, 7, "DEUDA TOTAL ($):", align='R')
+        pdf.cell(40, 7, self.formato_moneda(td), border=1, align='C', ln=True)
         path = os.path.join(os.getcwd(), "pdf", f"Deudores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf")
         pdf.output(path)
         self.abrir_archivo(path)
@@ -1288,9 +1279,6 @@ class AppApicola:
                 pdf.image(logo, 10, 8, 33)
             except:
                 pass
-        pdf.set_font("Arial", 'B', 15)
-        pdf.cell(0, 10, 'PRESUPUESTO', ln=True, align='C')
-        pdf.ln(5)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True, align='R')
         pdf.cell(0, 7, "Datos del Cliente:", ln=True)
@@ -1319,13 +1307,15 @@ class AppApicola:
         else:
             pdf.cell(150, 6, "TOTAL ($):", align='R')
         pdf.cell(40, 6, self.formato_moneda(total), border=1, align='C', ln=True)
+
+        nombre_f = cli.split('\n')[0].split(" (")[0].split(" - CUIT/DNI: ")[0].replace(" ", "_")
         if preview:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                 pdf_path = tmp.name
             pdf.output(pdf_path)
             return pdf_path
         os.makedirs("presupuestos", exist_ok=True)
-        path = os.path.join("presupuestos", f"Pres_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+        path = os.path.join("presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('-', '')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(path)
         return path
 
