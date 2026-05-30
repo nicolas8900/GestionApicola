@@ -541,7 +541,15 @@ class AppApicola:
             for t_path in archivos_a_abrir:
                 try:
                     if os.name == 'nt':
-                        os.startfile(t_path, "print")
+                        try:
+                            os.startfile(t_path, "print")
+                        except OSError:
+                            # Try using PDFgear launcher if default print action fails
+                            pdfgear_path = r"C:\Program Files\PDFgear\PDFLauncher.exe"
+                            if os.path.exists(pdfgear_path):
+                                subprocess.run([pdfgear_path, t_path], check=False)
+                            else:
+                                raise
                     elif os.name == 'posix':
                         subprocess.run(['lpr', t_path], check=False)
                 except OSError as e:
@@ -570,7 +578,7 @@ class AppApicola:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
         pdf.cell(140, 7, "Producto", border=1, align='C')
-        pdf.cell(40, 7, "Cantidad", border=1, align='R', ln=True)
+        pdf.cell(40, 7, "Cantidad", border=1, align='C', ln=True)
         pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
@@ -673,9 +681,9 @@ class AppApicola:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='R')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
+        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
         pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
@@ -853,9 +861,9 @@ class AppApicola:
             pdf.cell(0, 5, f"Año: {anio}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='R')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
+        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
             x, y = pdf.get_x(), pdf.get_y()
@@ -895,9 +903,9 @@ class AppApicola:
         pdf.cell(0, 5, f"Periodo: {filtro}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='R')
-        pdf.cell(30, 7, "P.Prom ($)", border=1, align='R')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
+        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(30, 7, "P.Prom ($)", border=1, align='C')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
             x, y = pdf.get_x(), pdf.get_y()
@@ -1306,9 +1314,9 @@ class AppApicola:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
         pdf.cell(100, 7, "Producto", border=1, align='C')
-        pdf.cell(20, 7, "Cant", border=1, align='R')
-        pdf.cell(30, 7, "P.Unit ($)", border=1, align='R')
-        pdf.cell(40, 7, "Subtotal ($)", border=1, align='R', ln=True)
+        pdf.cell(20, 7, "Cant", border=1, align='C')
+        pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
+        pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
         pdf.set_font("Arial", 'B', 10)
         for p in prods:
             x, y = pdf.get_x(), pdf.get_y()
