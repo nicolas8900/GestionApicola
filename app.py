@@ -71,8 +71,9 @@ class AppApicola:
         ]
 
         init_db()
-        os.makedirs("pdf", exist_ok=True)
-        os.makedirs("presupuestos", exist_ok=True)
+        os.makedirs("Pdf", exist_ok=True)
+        os.makedirs("Presupuestos", exist_ok=True)
+        os.makedirs("Deudores", exist_ok=True)
 
         with get_db_connection() as conn:
             c = conn.cursor()
@@ -577,7 +578,7 @@ class AppApicola:
             return pdf_path
 
         nombre_archivo = nombre_f.replace(" ", "_").replace("/", "-")
-        pdf_path = os.path.join(os.getcwd(), "pdf", f"OrdenCarga_{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        pdf_path = os.path.join(os.getcwd(), "Pdf", f"OrdenCarga_{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(pdf_path)
         return pdf_path
 
@@ -707,7 +708,7 @@ class AppApicola:
             pdf.output(pdf_path)
             return pdf_path
         nombre_archivo = nombre_f.replace(" ", "_").replace("/", "-")
-        pdf_path = os.path.join(os.getcwd(), "pdf", f"{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        pdf_path = os.path.join(os.getcwd(), "Pdf", f"{nombre_archivo}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(pdf_path)
         return pdf_path
 
@@ -1071,18 +1072,18 @@ class AppApicola:
         cols = ["Nombre", "CUIT/DNI", "Teléfono", "Provincia", "Localidad", "Saldo"]
         ws = [60, 40, 40, 40, 40, 40]
         for i, col in enumerate(cols):
-            pdf.cell(ws[i], 10, col, border=1, align='C')
+            pdf.cell(ws[i], 7, col, border=1, align='C')
         pdf.ln()
         td = 0
         for item in items:
             for i, val in enumerate(item):
-                pdf.cell(ws[i], 10, str(val).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
+                pdf.cell(ws[i], 7, str(val).encode('latin-1', 'replace').decode('latin-1'), border=1, align='C')
             pdf.ln()
             td += float(str(item[5]).replace(".", "").replace(",", "."))
         pdf.ln(5)
         pdf.cell(150, 7, "DEUDA TOTAL ($):", align='R')
         pdf.cell(40, 7, self.formato_moneda(td), border=1, align='R', ln=True)
-        path = os.path.join(os.getcwd(), "pdf", f"Deudores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf")
+        path = os.path.join("Deudores", f"Deudores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf")
         pdf.output(path)
         self.abrir_archivo(path)
 
@@ -1362,8 +1363,8 @@ class AppApicola:
                 pdf_path = tmp.name
             pdf.output(pdf_path)
             return pdf_path
-        os.makedirs("presupuestos", exist_ok=True)
-        path = os.path.join("presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        os.makedirs("Presupuestos", exist_ok=True)
+        path = os.path.join("Presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(path)
         return path
 
