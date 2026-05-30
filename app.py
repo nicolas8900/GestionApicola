@@ -527,36 +527,41 @@ class AppApicola:
         except Exception as e:
             messagebox.showerror("Error PDF", f"No se pudo guardar el archivo PDF.\nError: {e}")
 
-        info_msg = "Venta registrada correctamente."
+        msg = "Venta registrada correctamente.\n"
         if pdf_generado:
-            info_msg += f"\nPDF guardado en la carpeta 'pdf':\n{os.path.basename(pdf_generado)}"
-        messagebox.showinfo("Éxito", info_msg)
+            msg += f"PDF: {os.path.basename(pdf_generado)}\n"
+        msg += "\n¿Desea imprimir el comprobante ahora?"
 
-        if messagebox.askyesno("Imprimir", "¿Desea imprimir el ticket de venta?"):
+        if messagebox.askyesno("Éxito", msg):
             t_path_venta = pdf_generado if pdf_generado else self.generar_ticket_pdf(self.cliente_actual_info, fecha, total, detalle, "Cliente", "clientes", con_iva)
-            archivos_a_abrir = [t_path_venta]
+            archivos_a_imprimir = [t_path_venta]
             if orden_carga:
                 t_path_carga = self.generar_orden_carga(self.cliente_actual_info, fecha, detalle, "clientes")
-                archivos_a_abrir.append(t_path_carga)
-            for t_path in archivos_a_abrir:
+                archivos_a_imprimir.append(t_path_carga)
+
+            for t_path in archivos_a_imprimir:
+                impreso = False
                 try:
                     if os.name == 'nt':
                         try:
                             os.startfile(t_path, "print")
+                            impreso = True
                         except OSError:
-                            # Try using PDFgear launcher if default print action fails
-                            pdfgear_path = r"C:\Program Files\PDFgear\PDFLauncher.exe"
-                            if os.path.exists(pdfgear_path):
-                                subprocess.run([pdfgear_path, t_path], check=False)
+                            pdfgear = r"C:\Program Files\PDFgear\PDFLauncher.exe"
+                            if os.path.exists(pdfgear):
+                                # PDFgear uses '-p' flag for printing via command line
+                                subprocess.run([pdfgear, "-p", t_path], check=False)
+                                impreso = True
                             else:
                                 raise
                     elif os.name == 'posix':
                         subprocess.run(['lpr', t_path], check=False)
-                except OSError as e:
-                    messagebox.showwarning("Información de Impresión", f"Error: Falta asociación de archivos para imprimir PDFs. Por favor, asocie un lector de PDF (Adobe, Sumatra, etc.) con la acción de imprimir o imprima manualmente el archivo que se abrirá a continuación.\nDetalle: {e}")
+                        impreso = True
                 except Exception as e:
-                    messagebox.showerror("Error de Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nError: {e}")
-                self.abrir_archivo(t_path)
+                    messagebox.showwarning("Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nSe abrirá el archivo para impresión manual.\nError: {e}")
+
+                if not impreso:
+                    self.abrir_archivo(t_path)
         self.limpiar_formulario_venta()
         self.actualizar_tablas()
 
