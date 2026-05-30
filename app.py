@@ -545,7 +545,7 @@ class AppApicola:
                     elif os.name == 'posix':
                         subprocess.run(['lpr', t_path], check=False)
                 except OSError as e:
-                    messagebox.showwarning("Información de Impresión", f"No se pudo iniciar la impresión automática (Falta asociación de archivos).\nPor favor, imprima manualmente desde el PDF abierto.\nError: {e}")
+                    messagebox.showwarning("Información de Impresión", f"Error: Falta asociación de archivos para imprimir PDFs. Por favor, imprima manualmente el archivo que se abrirá a continuación.\nDetalle: {e}")
                 except Exception as e:
                     messagebox.showerror("Error de Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nError: {e}")
                 self.abrir_archivo(t_path)
@@ -569,8 +569,9 @@ class AppApicola:
         if tel:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
-        pdf.cell(140, 7, "Producto", border=1)
+        pdf.cell(140, 7, "Producto", border=1, align='C')
         pdf.cell(40, 7, "Cantidad", border=1, align='C', ln=True)
+        pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
             pdf.multi_cell(140, 6, p['nombre'], border=1)
@@ -671,10 +672,11 @@ class AppApicola:
         if tel:
             pdf.cell(0, 5, f"Teléfono: {tel}", ln=True)
         pdf.ln(5)
-        pdf.cell(100, 7, "Producto", border=1)
+        pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
         pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
+        pdf.set_font("Arial", 'B', 10)
         for p in productos:
             x, y = pdf.get_x(), pdf.get_y()
             pdf.multi_cell(100, 6, p['nombre'], border=1)
@@ -845,14 +847,16 @@ class AppApicola:
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 10, f"BALANCE - {tag.upper()}", ln=True, align='C')
         pdf.cell(0, 5, f"Entidad: {info}", ln=True)
         if anio:
             pdf.cell(0, 5, f"Año: {anio}", ln=True)
         pdf.ln(5)
-        pdf.cell(100, 7, "Producto", border=1)
+        pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
         pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
+        pdf.set_font("Arial", 'B', 10)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
             x, y = pdf.get_x(), pdf.get_y()
@@ -888,12 +892,14 @@ class AppApicola:
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 10, f"BALANCE {tabla.upper()}", ln=True, align='C')
         pdf.cell(0, 5, f"Periodo: {filtro}", ln=True)
         pdf.ln(5)
-        pdf.cell(100, 7, "Producto", border=1)
+        pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
         pdf.cell(30, 7, "P.Prom ($)", border=1, align='C')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
+        pdf.set_font("Arial", 'B', 10)
         for k, v in acc.items():
             p_p = v['sub'] / v['cant'] if v['cant'] > 0 else 0
             x, y = pdf.get_x(), pdf.get_y()
@@ -1049,6 +1055,7 @@ class AppApicola:
         pdf = FPDF(orientation='L')
         pdf.add_page()
         pdf.set_font("Arial", 'B', 10)
+        pdf.cell(0, 10, "LISTADO DE DEUDORES", ln=True, align='C')
         pdf.cell(0, 5, f"Fecha: {datetime.now().strftime('%d-%m-%Y %H:%M')}", ln=True, align='R')
         pdf.ln(5)
         cols = ["Nombre", "CUIT/DNI", "Teléfono", "Provincia", "Localidad", "Saldo"]
@@ -1276,16 +1283,19 @@ class AppApicola:
         logo = next((p for p in ["logo.png", "logo.jpg", "logo.jpeg", "logo apicolavallejos con cuit.png", "logo apicolavallejos con cuit.jpg"] if os.path.exists(p)), None)
         if logo:
             try:
-                pdf.image(logo, 10, 8, 33)
+                pdf.image(logo, 10, 8, 60)
             except:
                 pass
+        pdf.set_font("Arial", 'B', 15)
+        pdf.cell(0, 10, 'PRESUPUESTO', ln=True, align='C')
+        pdf.ln(35)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True, align='R')
         pdf.cell(0, 7, "Datos del Cliente:", ln=True)
         for line in cli.split('\n'):
             pdf.cell(0, 5, line.encode('latin-1', 'replace').decode('latin-1'), ln=True)
         pdf.ln(5)
-        pdf.cell(100, 7, "Producto", border=1)
+        pdf.cell(100, 7, "Producto", border=1, align='C')
         pdf.cell(20, 7, "Cant", border=1, align='C')
         pdf.cell(30, 7, "P.Unit ($)", border=1, align='C')
         pdf.cell(40, 7, "Subtotal ($)", border=1, align='C', ln=True)
@@ -1315,7 +1325,7 @@ class AppApicola:
             pdf.output(pdf_path)
             return pdf_path
         os.makedirs("presupuestos", exist_ok=True)
-        path = os.path.join("presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('-', '')}_{datetime.now().strftime('%H%M%S')}.pdf")
+        path = os.path.join("presupuestos", f"Presupuesto_{nombre_f}_{fecha.replace('/', '-')}_{datetime.now().strftime('%H%M%S')}.pdf")
         pdf.output(path)
         return path
 
