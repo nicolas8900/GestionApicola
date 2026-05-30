@@ -545,7 +545,7 @@ class AppApicola:
                     elif os.name == 'posix':
                         subprocess.run(['lpr', t_path], check=False)
                 except Exception as e:
-                    print(f"Error al imprimir {t_path}: {e}")
+                    messagebox.showerror("Error de Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nError: {e}")
                 self.abrir_archivo(t_path)
         self.limpiar_formulario_venta()
         self.actualizar_tablas()
@@ -665,7 +665,7 @@ class AppApicola:
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, 'COMPROBANTE', ln=True, align='C')
+        pdf.cell(0, 10, 'DETALLE DE OPERACION', ln=True, align='C')
         pdf.ln(5)
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(0, 5, f"Fecha: {fecha}", ln=True)
@@ -1123,6 +1123,12 @@ class AppApicola:
         self.p_canvas.pack(side="left", fill="both", expand=True)
         self.p_scrollbar.pack(side="right", fill="y")
         self.p_scroll_f.bind("<Configure>", lambda e: self.p_canvas.configure(scrollregion=self.p_canvas.bbox("all")))
+
+        def _on_wheel_p(event):
+            self.p_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        self.p_canvas.bind("<Enter>", lambda e: self.p_canvas.bind_all("<MouseWheel>", _on_wheel_p))
+        self.p_canvas.bind("<Leave>", lambda e: self.p_canvas.unbind_all("<MouseWheel>"))
+
         self.inputs_presupuesto = []
         for mat in self.lista_materiales + [None] * 5:
             f = ttk.Frame(self.p_scroll_f)
@@ -1276,7 +1282,7 @@ class AppApicola:
     def generar_presupuesto_pdf(self, cli, fecha, total, prods, iva_en=False, iva_p=21.0, t_s=0, preview=False):
         pdf = FPDF()
         pdf.add_page()
-        logo = next((p for p in ["logo.png", "logo.jpg", "logo apicolavallejos con cuit.png"] if os.path.exists(p)), None)
+        logo = next((p for p in ["logo.png", "logo.jpg", "logo.jpeg", "logo apicolavallejos con cuit.png", "logo apicolavallejos con cuit.jpg"] if os.path.exists(p)), None)
         if logo:
             try:
                 pdf.image(logo, 10, 8, 33)
