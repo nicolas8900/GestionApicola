@@ -534,38 +534,12 @@ class AppApicola:
             msg += f"Ticket: {os.path.basename(pdf_vta)}\n"
         if pdf_oc:
             msg += f"Orden: {os.path.basename(pdf_oc)}\n"
-        msg += "\n¿Desea imprimir ahora?"
+        messagebox.showinfo("Éxito", msg)
 
-        if messagebox.askyesno("Éxito", msg):
-            archivos_a_imprimir = []
-            if pdf_vta:
-                archivos_a_imprimir.append(pdf_vta)
-            if pdf_oc:
-                archivos_a_imprimir.append(pdf_oc)
-
-            for t_path in archivos_a_imprimir:
-                impreso = False
-                try:
-                    if os.name == 'nt':
-                        try:
-                            os.startfile(t_path, "print")
-                            impreso = True
-                        except OSError:
-                            pdfgear = r"C:\Program Files\PDFgear\PDFLauncher.exe"
-                            if os.path.exists(pdfgear):
-                                # PDFgear uses '-p' flag for printing via command line
-                                subprocess.run([pdfgear, "-p", t_path], check=False)
-                                impreso = True
-                            else:
-                                raise
-                    elif os.name == 'posix':
-                        subprocess.run(['lpr', t_path], check=False)
-                        impreso = True
-                except Exception as e:
-                    messagebox.showwarning("Impresión", f"No se pudo imprimir automáticamente {os.path.basename(t_path)}.\nSe abrirá el archivo para impresión manual.\nError: {e}")
-
-                if not impreso:
-                    self.abrir_archivo(t_path)
+        if pdf_vta:
+            self.abrir_archivo(pdf_vta)
+        if pdf_oc:
+            self.abrir_archivo(pdf_oc)
         self.limpiar_formulario_venta()
         self.actualizar_tablas()
 
@@ -684,30 +658,10 @@ class AppApicola:
         msg = "Compra registrada.\n"
         if pdf_path:
             msg += f"Archivo: {os.path.basename(pdf_path)}\n"
-        msg += "\n¿Desea imprimir ahora?"
+        messagebox.showinfo("Éxito", msg)
 
-        if messagebox.askyesno("Éxito", msg):
-            if pdf_path:
-                impreso = False
-                try:
-                    if os.name == 'nt':
-                        try:
-                            os.startfile(pdf_path, "print")
-                            impreso = True
-                        except OSError:
-                            pdfgear = r"C:\Program Files\PDFgear\PDFLauncher.exe"
-                            if os.path.exists(pdfgear):
-                                subprocess.run([pdfgear, "-p", pdf_path], check=False)
-                                impreso = True
-                            else:
-                                raise
-                    elif os.name == 'posix':
-                        subprocess.run(['lpr', pdf_path], check=False)
-                        impreso = True
-                except Exception as e:
-                    messagebox.showwarning("Impresión", f"Error: {e}")
-                if not impreso:
-                    self.abrir_archivo(pdf_path)
+        if pdf_path:
+            self.abrir_archivo(pdf_path)
 
         self.limpiar_formulario_compra()
         self.actualizar_tablas()
@@ -1297,30 +1251,10 @@ class AppApicola:
         msg = "Presupuesto registrado.\n"
         if pdf_path:
             msg += f"Archivo: {os.path.basename(pdf_path)}\n"
-        msg += "\n¿Desea imprimir ahora?"
+        messagebox.showinfo("Éxito", msg)
 
-        if messagebox.askyesno("Éxito", msg):
-            if pdf_path:
-                impreso = False
-                try:
-                    if os.name == 'nt':
-                        try:
-                            os.startfile(pdf_path, "print")
-                            impreso = True
-                        except OSError:
-                            pdfgear = r"C:\Program Files\PDFgear\PDFLauncher.exe"
-                            if os.path.exists(pdfgear):
-                                subprocess.run([pdfgear, "-p", pdf_path], check=False)
-                                impreso = True
-                            else:
-                                raise
-                    elif os.name == 'posix':
-                        subprocess.run(['lpr', pdf_path], check=False)
-                        impreso = True
-                except Exception as e:
-                    messagebox.showwarning("Impresión", f"Error: {e}")
-                if not impreso:
-                    self.abrir_archivo(pdf_path)
+        if pdf_path:
+            self.abrir_archivo(pdf_path)
 
         self.limpiar_formulario_presupuesto()
         self.actualizar_tablas()
